@@ -123,6 +123,8 @@ class BirthdayApp {
                                 </span>
                             </p>
                         </div>
+                    </div>
+                </div>    
             </div>
         `).join('');
     }

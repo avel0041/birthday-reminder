@@ -9,9 +9,9 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.birthdayreminder</groupId>
-	<artifactId>app</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
-	<name>BirthdayReminder</name>
+	<artifactId>birthday-reminder</artifactId>
+	<version>1.0.0</version>
+	<name>birthday-reminder</name>
 	<description>Application for birthday tracking</description>
 	<url/>
 	<licenses>
@@ -97,5 +97,12 @@
 			</plugin>
 		</plugins>
 	</build>
-
+	<distributionManagement>
+		<repository>
+			<id>github</id>
+			<name>GitHub avel0041 Apache Maven Packages</name>
+			<url>https://maven.pkg.github.com/avel0041/birthday-reminder</url>
+		</repository>
+	</distributionManagement>
 </project>
+
