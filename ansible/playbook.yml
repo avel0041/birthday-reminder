@@ -1,0 +1,7 @@
+- name: Start birthday reminder service
+  hosts: birthday-reminder
+  remote_user: ansible
+  vars_files:
+    - secrets.yml
+  roles:
+    - role: backend

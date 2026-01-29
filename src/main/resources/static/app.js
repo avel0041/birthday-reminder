@@ -2,10 +2,14 @@
 class BirthdayApp {
     constructor() {
         this.API_BASE_URL = '/api/birthdays';
+        this.settings = {
+            upcomingLimit: 5
+        };
         this.init();
     }
 
     async init() {
+        this.loadSettings();
         await this.loadDashboard();
         await this.loadAllBirthdays();
         this.setupEventListeners();
@@ -17,11 +21,47 @@ class BirthdayApp {
             e.preventDefault();
             await this.createBirthday();
         });
-        
+        // Слайдер для лимита
+        const limitSlider = document.getElementById('limitSlider');
+        if (limitSlider) {
+            limitSlider.addEventListener('input', (e) => {
+                const value = e.target.value;
+                document.getElementById('limitValue').textContent = value;
+                this.settings.upcomingLimit = parseInt(value);
+            });
+            
+            limitSlider.addEventListener('change', () => {
+                this.saveSettings();
+                this.loadDashboard();  // Перезагружаем с новым лимитом
+            });
+        }
         // Инициализация модального окна редактирования
         this.setupEditModal();
     }
     
+ // Загрузка настроек из localStorage
+    loadSettings() {
+        const saved = localStorage.getItem('birthdayAppSettings');
+        if (saved) {
+            this.settings = { ...this.settings, ...JSON.parse(saved) };
+        }
+        
+        // Применяем настройки к UI
+        const limitSlider = document.getElementById('limitSlider');
+        const limitValue = document.getElementById('limitValue');
+        
+        if (limitSlider && limitValue) {
+            limitSlider.value = this.settings.upcomingLimit;
+            limitValue.textContent = this.settings.upcomingLimit;
+        }
+    }
+
+    // Сохранение настроек в localStorage
+    saveSettings() {
+        localStorage.setItem('birthdayAppSettings', JSON.stringify(this.settings));
+        this.showToast('Настройки сохранены!', 'success');
+    }
+
     setupEditModal() {
         // Очищаем форму при закрытии модального окна
         const editModal = document.getElementById('editModal');
@@ -39,9 +79,9 @@ class BirthdayApp {
             if (!response.ok) throw new Error('Ошибка загрузки dashboard');
             
             const data = await response.json();
-            
+            const limitedUpcoming = data.upcomingBirthdays.slice(0, this.settings.upcomingLimit);
             this.renderTodayBirthdays(data.todayBirthdays);
-            this.renderUpcomingBirthdays(data.upcomingBirthdays);
+            this.renderUpcomingBirthdays(limitedUpcoming);
             
             // Обновляем заголовки с количеством
             const todayHeader = document.querySelector('.card-header.bg-success h5');
@@ -51,7 +91,7 @@ class BirthdayApp {
                 todayHeader.innerHTML = `🎉 Сегодня празднуют (${data.todayCount})`;
             }
             if (upcomingHeader) {
-                upcomingHeader.innerHTML = `📅 Ближайшие дни рождения (${data.upcomingCount})`;
+                upcomingHeader.innerHTML = `📅 Ближайшие дни рождения (${this.settings.upcomingLimit})`;
             }
             
         } catch (error) {
@@ -152,10 +192,10 @@ class BirthdayApp {
                     </div>
                     <div>
                         <span class="badge bg-primary">
-                            Через ${birthday.daysUntilBirthday} дней
+                            Через ${birthday.daysUntilBirthday} дн.
                         </span>
                         <span class="badge bg-secondary ms-1">
-                            ${birthday.age + 1} лет
+                            ${birthday.age + 1} ${this.getYearsWord(birthday.age+1)}
                         </span>
                     </div>
                 </div>

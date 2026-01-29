@@ -1,0 +1,32 @@
+---
+- name: Install Java
+  apt:
+    name: openjdk-17-jdk
+    state: present
+  become: yes
+
+- name: Create user for backend
+  user:
+    name: "{{ service_user }}"
+    system: yes
+    create_home: no
+  become: yes
+
+- name: Create directory for app files
+  file:
+    path: "{{ app_dir }}"
+    state: directory
+    owner: "{{ service_user }}"
+    group: "{{ service_user }}"
+  become: yes
+
+- name: Upload artifact to remote
+  copy:
+    src: "{{ path_to_jar_file }}"
+    dest: "{{ app_dir }}/app.jar"
+  notify:
+    - Create systemd unit
+    - Reload systemd
+    - Start birthday reminder service
+
+

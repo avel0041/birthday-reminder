@@ -1,0 +1,14 @@
+[Unit]
+Description=Birthday Reminder Service
+After=network.target
+
+[Service]
+User={{ service_user }}
+Group={{ service_user }}
+WorkingDirectory={{ app_dir }}
+ExecStart=/usr/bin/java -jar app.jar
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

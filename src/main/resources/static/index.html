@@ -95,7 +95,7 @@
                     </div>
                 </div>
             </div>
-
+            
             <!-- Ближайшие дни рождения -->
             <div class="col-md-6 mb-4">
                 <div class="card">
@@ -159,7 +159,30 @@
             </div>
         </div>
     </div>
-
+    <div class="card mb-3">
+        <div class="card-header">
+            <h6 class="mb-0">⚙️ Настройки отображения</h6>
+        </div>
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-auto">
+                    <label for="limitSlider" class="form-label">
+                        Количество ближайших ДР: 
+                        <span id="limitValue" class="badge bg-primary">5</span>
+                    </label>
+                </div>
+                <div class="col">
+                    <input type="range" class="form-range" id="limitSlider" 
+                        min="1" max="20" value="5">
+                </div>
+                <div class="col-auto">
+                    <button class="btn btn-sm btn-outline-primary" onclick="saveSettings()">
+                        💾 Сохранить
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
     <!-- Модальное окно для редактирования -->
     <div class="modal fade" id="editModal" tabindex="-1">
         <div class="modal-dialog">

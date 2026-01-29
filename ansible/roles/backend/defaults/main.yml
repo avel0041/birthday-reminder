@@ -1,0 +1,5 @@
+service_user: "birthday-reminder"
+version: "1.0.1"
+artifact_name: "birthday-reminder-{{ version }}.jar"
+app_dir: "/opt/birthday-reminder"
+path_to_jar_file: "/home/developer/javaCourse/birthdayReminder/target/{{ artifact_name }}"
