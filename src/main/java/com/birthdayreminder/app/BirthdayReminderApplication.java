@@ -14,9 +14,9 @@ public class BirthdayReminderApplication {
 
 
 		// Рандомное заполнение БД
-		PersonRepository rep = context.getBean(PersonRepository.class);
-		for (int i = 0; i < 40; i++){
-			rep.save(DataGenerator.generateRandomPerson());
-		}
+		// PersonRepository rep = context.getBean(PersonRepository.class);
+		// for (int i = 0; i < 40; i++){
+		// 	rep.save(DataGenerator.generateRandomPerson());
+		// }
 	}
 }
