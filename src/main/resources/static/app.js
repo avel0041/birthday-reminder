@@ -178,7 +178,10 @@ class BirthdayApp {
         container.innerHTML = birthdays.map(birthday => `
             <div class="card birthday-card today-birthday mb-3">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start">
+                    <div class="d-flex align-items-start gap-3">
+                        <div class="profile-link" onclick="app.openProfile(${birthday.id})">
+                            ${this.renderAvatar(birthday, 'md')}
+                        </div>
                         <div>
                             <h5 class="card-title mb-1">${birthday.firstName} ${birthday.lastName}</h5>
                             <p class="card-text mb-1">
@@ -214,9 +217,11 @@ class BirthdayApp {
             <div class="upcoming-item">
                 <div class="d-flex justify-content-between align-items-center">
                     <div class="d-flex align-items-center gap-2">
-                        ${this.renderAvatar(birthday, 'sm')}
+                        <div class="profile-link" onclick="app.openProfile(${birthday.id})">
+                            ${this.renderAvatar(birthday, 'sm')}
+                        </div>
                         <div>
-                            <strong>${birthday.firstName} ${birthday.lastName}</strong>
+                            <strong class="profile-link" onclick="app.openProfile(${birthday.id})">${birthday.firstName} ${birthday.lastName}</strong>
                             <div class="text-muted small">
                                 ${this.formatDate(birthday.nextBirthday, { month: 'long', day: 'numeric' })}
                             </div>
@@ -264,9 +269,11 @@ class BirthdayApp {
                             <tr ${birthday.birthdayToday ? 'class="table-success"' : ''}>
                                 <td>
                                     <div class="d-flex align-items-center gap-2">
-                                        ${this.renderAvatar(birthday, 'sm')}
+                                        <div class="profile-link" onclick="app.openProfile(${birthday.id})">
+                                            ${this.renderAvatar(birthday, 'sm')}
+                                        </div>
                                         <div>
-                                            <strong>${birthday.firstName} ${birthday.lastName}</strong>
+                                            <strong class="profile-link" onclick="app.openProfile(${birthday.id})">${birthday.firstName} ${birthday.lastName}</strong>
                                             ${birthday.birthdayToday ? 
                                                 '<span class="badge bg-success ms-1">Сегодня!</span>' : 
                                                 ''}
@@ -352,6 +359,45 @@ class BirthdayApp {
         } catch (error) {
             console.error('Ошибка создания:', error);
             this.showToast('Ошибка сети при добавлении', 'danger');
+        }
+    }
+
+    async openProfile(id) {
+        try {
+            const response = await fetch(`${this.API_BASE_URL}/${id}`);
+            if (!response.ok) {
+                throw new Error('Profile load failed');
+            }
+
+            const profile = await response.json();
+            const profilePhoto = document.getElementById('profilePhoto');
+            const profileName = document.getElementById('profileName');
+            const profileBirthDate = document.getElementById('profileBirthDate');
+            const profileAge = document.getElementById('profileAge');
+            const profileNextBirthday = document.getElementById('profileNextBirthday');
+            const profileDaysLeft = document.getElementById('profileDaysLeft');
+
+            profileName.textContent = `${profile.firstName} ${profile.lastName}`;
+            profileBirthDate.textContent = `Дата рождения: ${this.formatDate(profile.birthDate)}`;
+            profileAge.textContent = `Возраст: ${profile.age} ${this.getYearsWord(profile.age)}`;
+            profileNextBirthday.textContent = `Следующий день рождения: ${this.formatDate(profile.nextBirthday)}`;
+            profileDaysLeft.textContent = `До следующего дня рождения: ${profile.daysUntilBirthday} дн.`;
+
+            if (profile.photoUrl) {
+                profilePhoto.src = profile.photoUrl;
+                profilePhoto.alt = profileName.textContent;
+            } else {
+                profilePhoto.src = '';
+                profilePhoto.alt = profileName.textContent;
+                profilePhoto.style.background = '#f1f3f5';
+            }
+
+            const modalElement = document.getElementById('profileModal');
+            const modal = new bootstrap.Modal(modalElement);
+            modal.show();
+        } catch (error) {
+            console.error('Ошибка отображения профиля:', error);
+            this.showToast('Ошибка отображения профиля', 'danger');
         }
     }
 
