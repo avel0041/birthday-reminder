@@ -27,6 +27,7 @@ public class BirthdayService {
             .firstName(person.getFirstName())
             .lastName(person.getLastName())
             .birthDate(person.getBirthDate())
+            .photoUrl(person.getPhotoUrl())
             .age(person.getAge())
             .nextBirthday(person.getNextBirthday())
             .birthdayToday(person.isBirthdayToday())
@@ -63,6 +64,7 @@ public class BirthdayService {
             .firstName(personDTO.getFirstName())
             .lastName(personDTO.getLastName())
             .birthDate(personDTO.getBirthDate())
+            .photoUrl(personDTO.getPhotoUrl())
             .build();
             
         Person saved = personRepository.save(person);
@@ -83,7 +85,18 @@ public class BirthdayService {
         person.setFirstName(personDTO.getFirstName());
         person.setLastName(personDTO.getLastName());
         person.setBirthDate(personDTO.getBirthDate());
-        
+        if (personDTO.getPhotoUrl() != null){
+            person.setPhotoUrl(personDTO.getPhotoUrl());
+        }
+        return convertToDTO(personRepository.save(person));
+    }
+    
+    @Transactional
+    public PersonDTO updatePhoto(Long id, String photoUrl) {
+        Person person = personRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Person not found"));
+
+        person.setPhotoUrl(photoUrl);
         return convertToDTO(personRepository.save(person));
     }
     

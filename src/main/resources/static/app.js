@@ -69,6 +69,10 @@ class BirthdayApp {
             editModal.addEventListener('hidden.bs.modal', () => {
                 document.getElementById('editForm').reset();
                 document.getElementById('editId').value = '';
+                const editPhoto = document.getElementById('editPhoto');
+                if (editPhoto) {
+                    editPhoto.value = '';
+                }
             });
         }
     }
@@ -134,6 +138,31 @@ class BirthdayApp {
         }
     }
 
+    getInitials(firstName, lastName) {
+        const first = (firstName || '').trim();
+        const last = (lastName || '').trim();
+        const firstInitial = first ? first[0].toUpperCase() : '';
+        const lastInitial = last ? last[0].toUpperCase() : '';
+        return `${firstInitial}${lastInitial}` || '??';
+    }
+
+    renderAvatar(birthday, size = 'md') {
+        if (birthday.photoUrl) {
+            return `
+                <div class="avatar avatar-${size}">
+                    <img class="avatar-img" src="${birthday.photoUrl}" alt="${birthday.firstName} ${birthday.lastName}">
+                </div>
+            `;
+        }
+
+        const initials = this.getInitials(birthday.firstName, birthday.lastName);
+        return `
+            <div class="avatar avatar-${size}">
+                ${initials}
+            </div>
+        `;
+    }
+
     renderTodayBirthdays(birthdays) {
         const container = document.getElementById('todayBirthdays');
         
@@ -184,12 +213,15 @@ class BirthdayApp {
         container.innerHTML = birthdays.map(birthday => `
             <div class="upcoming-item">
                 <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <strong>${birthday.firstName} ${birthday.lastName}</strong>
-                        <div class="text-muted small">
-                            ${this.formatDate(birthday.nextBirthday, { month: 'long', day: 'numeric' })}
+                    <div class="d-flex align-items-center gap-2">
+                        ${this.renderAvatar(birthday, 'sm')}
+                        <div>
+                            <strong>${birthday.firstName} ${birthday.lastName}</strong>
+                            <div class="text-muted small">
+                                ${this.formatDate(birthday.nextBirthday, { month: 'long', day: 'numeric' })}
+                            </div>
                         </div>
-                    </div>
+                    </div>    
                     <div>
                         <span class="badge bg-primary">
                             Через ${birthday.daysUntilBirthday} дн.
@@ -231,10 +263,15 @@ class BirthdayApp {
                         ${birthdays.map(birthday => `
                             <tr ${birthday.birthdayToday ? 'class="table-success"' : ''}>
                                 <td>
-                                    <strong>${birthday.firstName} ${birthday.lastName}</strong>
-                                    ${birthday.birthdayToday ? 
-                                        '<span class="badge bg-success ms-1">Сегодня!</span>' : 
-                                        ''}
+                                    <div class="d-flex align-items-center gap-2">
+                                        ${this.renderAvatar(birthday, 'sm')}
+                                        <div>
+                                            <strong>${birthday.firstName} ${birthday.lastName}</strong>
+                                            ${birthday.birthdayToday ? 
+                                                '<span class="badge bg-success ms-1">Сегодня!</span>' : 
+                                                ''}
+                                        </div>
+                                    </div>
                                 </td>
                                 <td>${this.formatDate(birthday.birthDate)}</td>
                                 <td>${birthday.age}</td>
@@ -269,6 +306,9 @@ class BirthdayApp {
             birthDate: document.getElementById('birthDate').value
         };
 
+        const photoInput = document.getElementById('photo');
+        const photoFile = photoInput && photoInput.files ? photoInput.files[0] : null;
+
         // Валидация
         if (!formData.firstName || !formData.lastName || !formData.birthDate) {
             this.showToast('Заполните обязательные поля (Имя, Фамилия, Дата рождения)', 'warning');
@@ -286,7 +326,21 @@ class BirthdayApp {
             });
 
             if (response.ok) {
+                const created = await response.json();
+                if (photoFile) {
+                    try {
+                        await this.uploadPhoto(created.id, photoFile);
+                    } catch (uploadError) {
+                        console.error('Ошибка загрузки фотографии', uploadError);
+                        this.showToast('Ошибка загрузки фотографии', 'warning');
+                    }
+                }
+
                 document.getElementById('birthdayForm').reset();
+
+                if (photoInput) {
+                    photoInput.value = '';
+                }
                 await this.loadDashboard();
                 await this.loadAllBirthdays();
                 this.showToast('День рождения успешно добавлен!', 'success');
@@ -299,6 +353,23 @@ class BirthdayApp {
             console.error('Ошибка создания:', error);
             this.showToast('Ошибка сети при добавлении', 'danger');
         }
+    }
+
+    async uploadPhoto(id, photoFile) {
+        const uploadData = new FormData();
+        uploadData.append('photo', photoFile);
+
+        const response = await fetch(`${this.API_BASE_URL}/${id}/photo`, {
+            method: 'POST',
+            body: uploadData
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(errorText || 'Photo upload failed');
+        }
+
+        return response.json();
     }
 
     // ВАЖНО: Изменяем метод editBirthday - передаем данные напрямую, а не загружаем с сервера
@@ -333,6 +404,9 @@ class BirthdayApp {
             birthDate: document.getElementById('editBirthDate').value
         };
 
+        const photoInput = document.getElementById('editPhoto');
+        const photoFile = photoInput && photoInput.files ? photoInput.files[0] : null;
+
         // Валидация
         if (!formData.firstName || !formData.lastName || !formData.birthDate) {
             this.showToast('Заполните обязательные поля (Имя, Фамилия, Дата рождения)', 'warning');
@@ -350,6 +424,14 @@ class BirthdayApp {
             });
 
             if (response.ok) {
+                if (photoFile) {
+                    try {
+                        await this.uploadPhoto(id, photoFile);
+                    } catch (uploadError) {
+                        console.error('Ошибка загрузки фотографии', uploadError);
+                        this.showToast('Ошибка загрузки фотографии', 'warning');
+                    }
+                }
                 // Закрываем модальное окно
                 const modal = bootstrap.Modal.getInstance(document.getElementById('editModal'));
                 modal.hide();

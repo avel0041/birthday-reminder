@@ -33,3 +33,5 @@ build/
 
 .m2
 .mvn
+
+uploads/

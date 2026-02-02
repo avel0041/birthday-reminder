@@ -16,6 +16,7 @@ public class PersonDTO {
     private String firstName;
     private String lastName;
     private LocalDate birthDate;
+    private String photoUrl;
     private Integer age;
     private LocalDate nextBirthday;
     private Boolean birthdayToday;

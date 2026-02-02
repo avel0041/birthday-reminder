@@ -40,6 +40,9 @@ public class Person{
     @Past(message = "Дата рождения должна быть в прошлом")
     private LocalDate birthDate;
     
+    @Column(length = 512)
+    private String photoUrl;
+
     // Метод для получения текущего возраста
     public Integer getAge() {
         LocalDate today = LocalDate.now();

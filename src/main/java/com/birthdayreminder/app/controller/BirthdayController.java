@@ -1,5 +1,10 @@
 package com.birthdayreminder.app.controller;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
@@ -12,7 +17,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.birthdayreminder.app.dto.DashboardDTO;
@@ -106,6 +113,35 @@ public class BirthdayController {
         }
     }
     
+    @PostMapping("/{id}/photo")
+    public ResponseEntity<PersonDTO> uploadPhoto(@PathVariable Long id, @RequestParam("photo") MultipartFile photo) {
+        if (photo == null || photo.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ошибка загрузки фото");
+        }
+
+        try {
+            Path uploadDir = Paths.get("uploads", "people");
+            Files.createDirectories(uploadDir);
+
+            String extension = getExtension(photo.getOriginalFilename());
+            String fileName = id + extension;
+            Path targetPath = uploadDir.resolve(fileName).normalize();
+
+            Files.copy(photo.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
+
+            String photoUrl = "/uploads/people/" + fileName;
+            return ResponseEntity.ok(birthdayService.updatePhoto(id, photoUrl));
+        } catch (IOException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, 
+                "Ошибка чтения файла", e);
+        } catch (RuntimeException e) {
+            if (e.getMessage().contains("not found")) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Фото не найдено", e);
+            }
+            throw e;
+        }
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<PersonDTO> updatePerson(
             @PathVariable Long id,
@@ -135,5 +171,20 @@ public class BirthdayController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, 
                 "Ошибка удаления дня рождения: " + e.getMessage(), e);
         }
+    }
+
+    private String getExtension(String filename) {
+        if (filename == null) {
+            return ".jpg";
+        }
+        int dotIndex = filename.lastIndexOf('.');
+        if (dotIndex < 0 || dotIndex == filename.length() - 1) {
+            return ".jpg";
+        }
+        String ext = filename.substring(dotIndex).toLowerCase();
+        if (!ext.matches("\\.[a-z0-9]{1,10}")) {
+            return ".jpg";
+        }
+        return ext;
     }
 }
